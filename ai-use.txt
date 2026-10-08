@@ -1,0 +1,124 @@
+I used GhatGPT to finalize some tailwind css classes to make my app look better.
+
+Here is my root page 
+import Image from "next/image";
+import type { Metadata } from "next";
+export const metadata: Metadata = {
+  title: "Peer Tutoring Hub",
+};
+export default function HomePage() {
+  return (
+    <div className="min-h-screen flex items-start justify-center">
+      <div className="space-y-3 max-w-3xl">
+        <h1 className="text-5xl font-semibold">Peer Tutoring Hub</h1>
+        <Image
+          src="/images/tutoring.png"
+          alt="Student meeting with a peer tutor"
+          loading="eager"
+          width={500}
+          height={500}
+        />
+      </div>
+    </div>
+  );
+}
+Here is my layout
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import Navbar from "@/components/Navbar";
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+export const metadata: Metadata = {
+  title: "Lab1 Tutor Hub",
+  description: "Created by Jamison Orton",
+};
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html
+      lang="en"
+      className={${geistSans.variable} ${geistMono.variable} h-full antialiased}
+    >
+      <body className="min-h-full flex flex-col">
+        <Navbar />
+        {children}
+      </body>
+    </html>
+  );
+}
+Here is my Navbar
+import Link from "next/link";
+import { GraduationCap } from "lucide-react";
+const Navbar = () => {
+  return (
+    <nav className="fixed top-0 w-full flex items-center justify-around py-5 px-24 border-b border-gray-700 bg-gray-700">
+      <Link
+        href="/"
+        className="transistion duration-300 hover:scale-110 text-gray-200 hover:text-white"
+      >
+        <GraduationCap />
+      </Link>
+  <ul className="flex gap-10 text-lg">
+    <Link
+      href="/tutors"
+      className="text-gray-200 hover:text-white transition-colors"
+    >
+      Tutors
+    </Link>
+    <Link
+      href="/request-form"
+      className="text-gray-200 hover:text-white transition-colors"
+    >
+      Request Form
+    </Link>
+  </ul>
+</nav>
+  );
+};
+export default Navbar;
+Why is my h1 hidden by my navbar?
+
+
+Wednesday 2:18 PM
+Your navbar uses fixed, so it is removed from the normal document flow. The page content starts at the very top and sits underneath it.
+Add top padding to the content:
+export default function HomePage() {
+  return (
+    <main className="min-h-screen pt-24 flex items-start justify-center">
+      <div className="space-y-3 max-w-3xl">
+        <h1 className="text-5xl font-semibold">Peer Tutoring Hub</h1>
+
+        <Image
+          src="/images/tutoring.png"
+          alt="Student meeting with a peer tutor"
+          loading="eager"
+          width={500}
+          height={500}
+        />
+      </div>
+    </main>
+  );
+}
+Or apply it globally in your layout:
+<body className="min-h-full flex flex-col">
+  <Navbar />
+  <main className="pt-24">{children}</main>
+</body>
+pt-24 provides space below the fixed navbar. Also, your navbar has a typo: transistion should be transition.
+
+
+Wednesday 2:18 PM
+can I just remove fixed?
+
+
+Wednesday 2:19 PM
+Yes. Removing fixed lets the navbar remain in the normal document flow, so the page content will appear below it automatically:
+<nav className="w-full flex items-center justify-around py-5 px-24 border-b border-gray-700 bg-gray-700">
+Your <h1> should then no longer be hidden.
+
