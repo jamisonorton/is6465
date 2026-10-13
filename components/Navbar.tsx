@@ -13,6 +13,12 @@ const Navbar = () => {
 
       <ul className="flex gap-10 text-lg">
         <Link
+          href="/lab2"
+          className="text-gray-200 hover:text-white transition-colors"
+        >
+          lab 2
+        </Link>
+        <Link
           href="/tutors"
           className="text-gray-200 hover:text-white transition-colors"
         >
