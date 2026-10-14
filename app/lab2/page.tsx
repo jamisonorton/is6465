@@ -93,6 +93,7 @@ for (let i = 1; i <= 10; i++) {
 export default function lab2() {
   return (
     <div>
+      <div>Lab 2A</div>
       <div>
         Arithmetic expression: price(5) * quantity(2) - Math.abs(1 -
         discount)(8) = {mathStuff}
