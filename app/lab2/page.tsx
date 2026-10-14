@@ -30,9 +30,9 @@ const a = 3;
 const b = 3;
 const c = 5;
 console.log(a === b);
-console.log(a === b && b === c);
+// console.log(a === b && b === c);
 console.log(a === b || a === c);
-console.log(a === b && a !== c);
+// console.log(a === b && a !== c);
 console.log(!(a === b));
 
 // An if...else statement that determines scholarship eligibility from a GPA
