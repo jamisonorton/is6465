@@ -25,6 +25,10 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toast";
+
 import { Calendar as CalendarIcon } from "lucide-react";
 
 export default function RequestForm({ availableTutors }: RequestFormProps) {
@@ -33,6 +37,17 @@ export default function RequestForm({ availableTutors }: RequestFormProps) {
   const [selectedTutor, setSelectedTutor] = useState<AvailableTutor | null>(
     null,
   );
+
+  function toastPost() {
+    const id = toast.add({
+      title: "Tutoring session created",
+      description: "Sunday, December 3 at 9:00 AM",
+      actionProps: {
+        children: "Undo",
+        onClick: () => toast.close(id),
+      },
+    });
+  }
 
   useEffect(() => {
     setDate(new Date());
@@ -58,6 +73,10 @@ export default function RequestForm({ availableTutors }: RequestFormProps) {
             </CardHeader>
 
             <CardContent className="space-y-6 px-6 py-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" type="name" placeholder="John Doe" required />
+              </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-slate-700">
                   Session date
@@ -135,7 +154,7 @@ export default function RequestForm({ availableTutors }: RequestFormProps) {
             </CardContent>
 
             <CardFooter className="border-t bg-slate-50 px-6 py-4">
-              <Button type="submit" className="w-full">
+              <Button className="w-full" onClick={toastPost}>
                 Request Session
               </Button>
             </CardFooter>
