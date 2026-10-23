@@ -1,12 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
 import { Controller, useForm } from "react-hook-form";
-import * as z from "zod";
+import { format } from "date-fns";
+import {
+  formSchema,
+  FormFields,
+  courses,
+  preferredTimes,
+} from "@/lib/formSchema";
 
-import type { AvailableTutor } from "@/lib/available-tutors";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
@@ -15,14 +20,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
+import { toast } from "@/components/ui/toast";
 import {
   Popover,
   PopoverContent,
@@ -35,214 +40,94 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEffect, useState } from "react";
 
-const times = ["Morning", "Afternoon", "Night"] as const;
-
-const formSchema = z.object({
-  name: z.string().trim().min(5, "Name must be at least 5 characters."),
-  course: z.string().min(1, "Choose a course."),
-  tutor: z.string().min(1, "Choose a tutor."),
-  topic: z.string().trim().min(1, "Topic is required."),
-  date: z.date({ error: "Choose a session date." }),
-  time: z.enum(times, { error: "Choose a preferred time." }),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-type RequestFormProps = {
-  availableTutors: AvailableTutor[];
-};
-
-export default function RequestForm({ availableTutors }: RequestFormProps) {
-  // Inside RequestForm:
-  const [today, setToday] = useState<Date>();
-
-  useEffect(() => {
-    setToday(new Date());
-  }, []);
-
-  const courses = [...new Set(availableTutors.map((tutor) => tutor.className))];
-
-  const form = useForm<FormValues>({
+export default function RequestForm() {
+  const form = useForm<FormFields>({
     resolver: zodResolver(formSchema),
+    mode: "onChange",
     defaultValues: {
-      name: "",
-      course: "",
-      tutor: "",
+      course: undefined,
       topic: "",
       date: undefined,
       time: undefined,
     },
   });
 
-  const selectedCourse = form.watch("course");
-  const tutorsForCourse = availableTutors.filter(
-    (tutor) => tutor.className === selectedCourse,
-  );
+  const onSubmit = async (data: FormFields) => {
+    const response = await fetch("/api/process-request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
 
-  function onSubmit(values: FormValues) {
-    // Send the validated values to your API or server action.
-    console.log(values);
-  }
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.message ?? "Could not submit the tutoring request.",
+      );
+    }
+
+    const id = toast.add({
+      title: "Request received",
+      description: (
+        <>
+          <strong>Course:</strong> {result.course}
+          <br />
+          <strong>Topic:</strong> {result.topic}
+          <br />
+          <strong>Preferred date:</strong>{" "}
+          {format(new Date(result.date), "PPP")}
+          <br />
+          <strong>Preferred time:</strong> {result.time}
+          <br />
+          <strong>Status:</strong> {result.status}
+        </>
+      ),
+      actionProps: {
+        onClick() {
+          toast.close(id);
+        },
+      },
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50 px-6 py-16">
-      <div className="mx-auto flex max-w-6xl items-center justify-center">
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="w-full max-w-lg"
-        >
-          <Card className="overflow-hidden rounded-2xl border-slate-200 bg-white shadow-xl">
-            <CardHeader className="border-b bg-slate-50 px-6 py-6">
-              <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">
-                Request a Tutoring Session
-              </CardTitle>
-              <CardDescription className="text-slate-600">
-                Choose a course, tutor, date, and preferred time.
-              </CardDescription>
-            </CardHeader>
+    <div className="flex max-h-screen items-center justify-center bg-muted/30 px-4 py-10">
+      <Card className="w-full max-w-xl shadow-lg">
+        <CardHeader className="border-b">
+          <CardTitle className="text-2xl">Tutor Request</CardTitle>
+          <CardDescription>
+            Tell us what you need help with and when you’re available.
+          </CardDescription>
+        </CardHeader>
 
-            <CardContent className="px-6 py-6">
-              <FieldGroup className="gap-5">
-                <Controller
-                  name="name"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>Name</FieldLabel>
-                      <Input
-                        {...field}
-                        id={field.name}
-                        placeholder="Jordan Doe"
-                        autoComplete="name"
-                        aria-invalid={fieldState.invalid}
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <CardContent className="pb-4">
+            <FieldGroup>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <Controller
                   name="course"
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>Course</FieldLabel>
+                      <FieldLabel>Course</FieldLabel>
                       <Select
-                        name={field.name}
-                        value={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          form.setValue("tutor", "", { shouldValidate: true });
-                        }}
+                        items={courses}
+                        value={field.value ?? null}
+                        onValueChange={field.onChange}
                       >
-                        <SelectTrigger
-                          id={field.name}
-                          aria-invalid={fieldState.invalid}
-                        >
-                          <SelectValue placeholder="Select a course" />
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Choose a course" />
                         </SelectTrigger>
                         <SelectContent>
                           {courses.map((course) => (
-                            <SelectItem key={course} value={course}>
-                              {course}
+                            <SelectItem key={course.value} value={course.value}>
+                              {course.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  name="tutor"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>Tutor</FieldLabel>
-                      <Select
-                        name={field.name}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        disabled={!selectedCourse}
-                      >
-                        <SelectTrigger
-                          id={field.name}
-                          aria-invalid={fieldState.invalid}
-                        >
-                          <SelectValue placeholder="Select a tutor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {tutorsForCourse.map((tutor) => (
-                            <SelectItem key={tutor.name} value={tutor.name}>
-                              {tutor.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  name="topic"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>Topic</FieldLabel>
-                      <Input
-                        {...field}
-                        id={field.name}
-                        placeholder="What would you like help with?"
-                        aria-invalid={fieldState.invalid}
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-
-                <Controller
-                  name="date"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>Session date</FieldLabel>
-                      <Popover>
-                        <PopoverTrigger
-                          render={
-                            <Button
-                              id={field.name}
-                              type="button"
-                              variant="outline"
-                              aria-invalid={fieldState.invalid}
-                              className="w-full justify-start text-left font-normal"
-                            />
-                          }
-                        >
-                          {field.value
-                            ? format(field.value, "PPP")
-                            : "Pick a date"}
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={today ? { before: today } : undefined}
-                          />
-                        </PopoverContent>
-                      </Popover>
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
                       )}
@@ -255,24 +140,19 @@ export default function RequestForm({ availableTutors }: RequestFormProps) {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>
-                        Preferred time
-                      </FieldLabel>
+                      <FieldLabel>Preferred time</FieldLabel>
                       <Select
-                        name={field.name}
-                        value={field.value ?? ""}
+                        items={preferredTimes}
+                        value={field.value ?? null}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger
-                          id={field.name}
-                          aria-invalid={fieldState.invalid}
-                        >
-                          <SelectValue placeholder="Select a time" />
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Choose a time" />
                         </SelectTrigger>
                         <SelectContent>
-                          {times.map((time) => (
-                            <SelectItem key={time} value={time}>
-                              {time}
+                          {preferredTimes.map((time) => (
+                            <SelectItem key={time.value} value={time.value}>
+                              {time.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -283,21 +163,74 @@ export default function RequestForm({ availableTutors }: RequestFormProps) {
                     </Field>
                   )}
                 />
-              </FieldGroup>
-            </CardContent>
+              </div>
 
-            <CardFooter className="border-t bg-slate-50 px-6 py-4">
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={form.formState.isSubmitting}
-              >
-                Request Session
-              </Button>
-            </CardFooter>
-          </Card>
+              <Controller
+                name="topic"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>What would you like help with?</FieldLabel>
+                    <InputGroup>
+                      <InputGroupTextarea
+                        {...field}
+                        aria-invalid={fieldState.invalid}
+                        placeholder="Describe the topic or problem you’re working on."
+                        className="min-h-28 resize-y"
+                      />
+                    </InputGroup>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="date"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>Date</FieldLabel>
+                    <Popover>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            type="button"
+                            variant="outline"
+                            aria-invalid={fieldState.invalid}
+                            className="w-full justify-start text-left font-normal"
+                          />
+                        }
+                      >
+                        {field.value
+                          ? format(field.value, "PPP")
+                          : "Choose a date"}
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ?? undefined}
+                          onSelect={(date) => field.onChange(date ?? null)}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </CardContent>
+
+          <CardFooter className="border-t">
+            <Button type="submit" className="w-full">
+              Submit request
+            </Button>
+          </CardFooter>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

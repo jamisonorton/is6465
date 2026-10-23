@@ -1,8 +1,11 @@
-export async function POST() {
-  return new Response("Your tutoring request was received.", {
-    status: 200,
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-    },
+export async function POST(request: Request) {
+  const data = await request.json();
+
+  return Response.json({
+    course: data.course,
+    topic: data.topic,
+    date: data.date,
+    time: data.time,
+    status: "Pending review",
   });
 }
