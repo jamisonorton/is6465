@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import RequestForm from "./RequestForm";
-import { getAvailableTutors } from "@/lib/available-tutors";
 
 export const metadata: Metadata = {
   title: "Request a Tutoring Session",
@@ -8,11 +7,9 @@ export const metadata: Metadata = {
 };
 
 export default function Request() {
-  const availableTutors = getAvailableTutors();
-
   return (
     <main>
-      <RequestForm availableTutors={availableTutors} />
+      <RequestForm />
     </main>
   );
 }

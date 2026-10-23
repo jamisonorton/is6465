@@ -93,19 +93,16 @@ export default function RequestForm() {
   };
 
   return (
-    <div className="flex max-h-screen items-center justify-center bg-muted/30 px-4 py-10">
-      <Card className="w-full max-w-xl shadow-lg">
-        <CardHeader className="border-b">
-          <CardTitle className="text-2xl">Tutor Request</CardTitle>
-          <CardDescription>
-            Tell us what you need help with and when you’re available.
-          </CardDescription>
+    <div className="container mx-auto max-w-3xl px-4 py-10">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Tutor Request</CardTitle>
         </CardHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="pb-4">
+          <CardContent className="pt-2 pb-4">
             <FieldGroup>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div className="grid gap-6 sm:grid-cols-2">
                 <Controller
                   name="course"
                   control={form.control}
@@ -191,7 +188,7 @@ export default function RequestForm() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>Date</FieldLabel>
+                    <FieldLabel>Preferred date</FieldLabel>
                     <Popover>
                       <PopoverTrigger
                         render={
@@ -224,9 +221,13 @@ export default function RequestForm() {
             </FieldGroup>
           </CardContent>
 
-          <CardFooter className="border-t">
-            <Button type="submit" className="w-full">
-              Submit request
+          <CardFooter className="border-t pt-6">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? "Submitting…" : "Submit request"}
             </Button>
           </CardFooter>
         </form>
