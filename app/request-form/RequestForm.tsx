@@ -69,19 +69,33 @@ export default function RequestForm() {
     }
 
     const id = toast.add({
-      title: "Request received",
+      title: result.message ?? "Request received",
       description: (
         <>
-          <strong>Course:</strong> {result.course}
-          <br />
-          <strong>Topic:</strong> {result.topic}
-          <br />
-          <strong>Preferred date:</strong>{" "}
-          {format(new Date(result.date), "PPP")}
-          <br />
-          <strong>Preferred time:</strong> {result.time}
-          <br />
-          <strong>Status:</strong> {result.status}
+          <span className="block">
+            <strong className="text-muted-foreground">Course:</strong>{" "}
+            <span className="font-medium text-foreground">{result.course}</span>
+          </span>
+          <span className="block">
+            <strong className="text-muted-foreground">Topic:</strong>{" "}
+            <span className="font-medium text-foreground">{result.topic}</span>
+          </span>
+          <span className="block">
+            <strong className="text-muted-foreground">Preferred date:</strong>{" "}
+            <span className="font-medium text-foreground">
+              {format(new Date(result.date), "PPP")}
+            </span>
+          </span>
+          <span className="block">
+            <strong className="text-muted-foreground">Preferred time:</strong>{" "}
+            <span className="font-medium text-foreground">{result.time}</span>
+          </span>
+          <span className="block">
+            <strong className="text-green-600">Status:</strong>{" "}
+            <span className="font-semibold text-green-600">
+              {result.status}
+            </span>
+          </span>
         </>
       ),
       actionProps: {
