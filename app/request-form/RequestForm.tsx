@@ -2,7 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { format } from "date-fns";
+import { useEffect, useState } from "react";
+import { format, startOfToday } from "date-fns";
 import {
   formSchema,
   FormFields,
@@ -15,7 +16,6 @@ import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -26,7 +26,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
 import { toast } from "@/components/ui/toast";
 import {
   Popover,
@@ -48,8 +53,8 @@ export default function RequestForm() {
     defaultValues: {
       course: undefined,
       topic: "",
-      date: undefined,
-      time: undefined,
+      preferreddate: undefined,
+      preferredtime: undefined,
     },
   });
 
@@ -83,12 +88,14 @@ export default function RequestForm() {
           <span className="block">
             <strong className="text-muted-foreground">Preferred date:</strong>{" "}
             <span className="font-medium text-foreground">
-              {format(new Date(result.date), "PPP")}
+              {format(new Date(result.preferreddate), "PPP")}
             </span>
           </span>
           <span className="block">
             <strong className="text-muted-foreground">Preferred time:</strong>{" "}
-            <span className="font-medium text-foreground">{result.time}</span>
+            <span className="font-medium text-foreground">
+              {result.preferredtime}
+            </span>
           </span>
           <span className="block">
             <strong className="text-green-600">Status:</strong>{" "}
@@ -105,6 +112,12 @@ export default function RequestForm() {
       },
     });
   };
+
+  const [firstAllowedDate, setFirstAllowedDate] = useState<Date | undefined>();
+
+  useEffect(() => {
+    setFirstAllowedDate(startOfToday());
+  }, []);
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-10">
@@ -147,7 +160,7 @@ export default function RequestForm() {
                 />
 
                 <Controller
-                  name="time"
+                  name="preferredtime"
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
@@ -187,8 +200,13 @@ export default function RequestForm() {
                         {...field}
                         aria-invalid={fieldState.invalid}
                         placeholder="Describe the topic or problem you’re working on."
-                        className="min-h-28 resize-y"
+                        className="min-h-28"
                       />
+                      <InputGroupAddon align="block-end">
+                        <InputGroupText>
+                          {field.value?.length ?? 0}/120
+                        </InputGroupText>
+                      </InputGroupAddon>
                     </InputGroup>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -198,7 +216,7 @@ export default function RequestForm() {
               />
 
               <Controller
-                name="date"
+                name="preferreddate"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
@@ -223,6 +241,11 @@ export default function RequestForm() {
                           mode="single"
                           selected={field.value ?? undefined}
                           onSelect={(date) => field.onChange(date ?? null)}
+                          disabled={
+                            firstAllowedDate
+                              ? { before: firstAllowedDate }
+                              : undefined
+                          }
                         />
                       </PopoverContent>
                     </Popover>

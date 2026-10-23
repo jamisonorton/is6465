@@ -1,15 +1,15 @@
 import { z } from "zod";
 
 const courseValues = {
-  IS_6465: "is6465",
-  IS_6495: "is6495",
-  IS_6570: "is6570",
+  IS_6465: "IS 6465",
+  IS_6495: "IS 6495",
+  IS_6570: "IS 6570",
 } as const;
 
 const timeValues = {
-  Morning: "morning",
-  Afternoon: "afternoon",
-  Night: "night",
+  Morning: "Morning",
+  Afternoon: "Afternoon",
+  Evening: "Evening",
 } as const;
 
 export const courses = Object.entries(courseValues).map(([label, value]) => ({
@@ -25,9 +25,26 @@ export const formSchema = z.object({
   course: z
     .enum(courseValues)
     .nonoptional({ message: "Please choose a course." }),
-  topic: z.string().nonempty({ message: "Topic is required." }),
-  date: z.date().nonoptional({ message: "Please select a date." }),
-  time: z
+  topic: z.string().max(120).trim().nonempty({ message: "Topic is required." }),
+  preferreddate: z
+    .date()
+    .nonoptional({ message: "Please select a date." })
+    .refine(
+      (date) => {
+        const selectedDay = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate(),
+        );
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        return selectedDay >= today;
+      },
+      { message: "Preferred date cannot be in the past." },
+    ),
+  preferredtime: z
     .enum(timeValues)
     .nonoptional({ message: "Please choose a preferred time." }),
 });
